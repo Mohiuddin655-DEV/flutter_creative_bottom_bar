@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tab_navigation_bar/tab_navigation_bar.dart';
 
 class NotchBottomBar extends StatefulWidget {
   const NotchBottomBar({
@@ -15,9 +16,11 @@ class _NotchBottomBarState extends State<NotchBottomBar>
 
   int _tabIndex = 0;
 
+  double height = 60;
+
   var _isExpanded = false;
   var _boxItemVisible = false;
-  final _duration = const Duration(milliseconds: 200);
+  final _duration = const Duration(milliseconds: 300);
 
   @override
   void initState() {
@@ -38,70 +41,15 @@ class _NotchBottomBarState extends State<NotchBottomBar>
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: GestureDetector(
-        child: Container(
-          width: 70,
-          height: 70,
-          margin: const EdgeInsets.only(top: 25),
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: IconButton(
-            icon: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) => Transform.rotate(
-                angle: _animation.value * 0.5 * 3.1415,
-                child: child,
-              ),
-              child: Icon(
-                _isExpanded ? Icons.close : Icons.add,
-                size: 32,
-                color: Colors.white,
-              ),
-            ),
-            onPressed: _toggleAnimation,
-          ),
-        ),
-      ),
+      floatingActionButton: _floatingButton(),
       bottomNavigationBar: Container(
-        height: 70,
         color: Colors.blue,
-        child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return BottomAppBar(
-                elevation: 0,
-                height: 70,
-                shape: _isExpanded ? const CircularNotchedRectangle() : null,
-                notchMargin: 0,
-                child: Row(
-                  children: [
-                    BButton(
-                      selected: _tabIndex == 0,
-                      icon: Icons.light_mode_outlined,
-                      onPressed: () => _onTabChanged(0),
-                    ),
-                    BButton(
-                      selected: _tabIndex == 1,
-                      icon: Icons.message_outlined,
-                      onPressed: () => _onTabChanged(1),
-                    ),
-                    const Spacer(),
-                    BButton(
-                      selected: _tabIndex == 2,
-                      icon: Icons.group_work_outlined,
-                      onPressed: () => _onTabChanged(2),
-                    ),
-                    BButton(
-                      selected: _tabIndex == 3,
-                      icon: Icons.copy_rounded,
-                      onPressed: () => _onTabChanged(3),
-                    ),
-                  ],
-                ),
-              );
-            }),
+        child: BottomAppBar(
+          elevation: 0,
+          notchMargin: 1.5,
+          shape: _isExpanded ? const CircularNotchedRectangle() : null,
+          child: _bottomBar(),
+        ),
       ),
       body: SizedBox(
         width: double.infinity,
@@ -112,8 +60,6 @@ class _NotchBottomBarState extends State<NotchBottomBar>
             Positioned(
               top: 0,
               bottom: 0,
-              left: 0,
-              right: 0,
               child: IndexedStack(
                 index: _tabIndex,
                 children: const [
@@ -123,6 +69,7 @@ class _NotchBottomBarState extends State<NotchBottomBar>
                   CustomPage(
                     title: "Page - 2",
                   ),
+                  SizedBox(),
                   CustomPage(
                     title: "Page - 3",
                   ),
@@ -134,56 +81,123 @@ class _NotchBottomBarState extends State<NotchBottomBar>
             ),
             AnimatedBuilder(
               animation: _animation,
-              builder: (context, child) {
-                final value = _animation.value;
-                return AnimatedPositioned(
-                  duration: _duration,
-                  bottom: _isExpanded && value > 0.5 ? 0 : -48,
-                  child: AnimatedContainer(
-                    duration: _duration,
-                    curve: Curves.fastEaseInToSlowEaseOut,
-                    width: _isExpanded ? 200.0 : 70.0,
-                    height: _isExpanded ? 200.0 : 70.0,
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(25),
+              builder: (_, child) {
+                return Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 500),
+                      bottom: _animation.value <= 0.5 ? -32 : -height + 12,
+                      child: Container(
+                        width: height,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
                     ),
-                    child: _boxItemVisible
-                        ? Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16 * _animation.value,
-                              vertical: 12 * _animation.value,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                BoxOptionItem(
-                                  title: "Mood check-in",
-                                  icon: Icons.face,
-                                  isSelected: true,
-                                  animation: _animation,
-                                ),
-                                BoxOptionItem(
-                                  title: "Voice note",
-                                  icon: Icons.record_voice_over_outlined,
-                                  animation: _animation,
-                                ),
-                                BoxOptionItem(
-                                  title: "Add photo",
-                                  icon: Icons.photo_camera_back_outlined,
-                                  animation: _animation,
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox(),
-                  ),
+                    child!,
+                  ],
                 );
               },
+              child: _box(),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  _floatingButton() {
+    return GestureDetector(
+      child: Container(
+        width: height,
+        height: height,
+        margin: const EdgeInsets.only(top: 35),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: IconButton(
+          icon: AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) => Transform.rotate(
+              angle: _animation.value * 0.5 * 3.1415,
+              child: child,
+            ),
+            child: Icon(
+              _isExpanded ? Icons.close : Icons.add,
+              size: 32,
+              color: Colors.white,
+            ),
+          ),
+          onPressed: _toggleAnimation,
+        ),
+      ),
+    );
+  }
+
+  _bottomBar() {
+    return TabNavigationBar(
+      backgroundColor: Colors.transparent,
+      indicatorHeight: 5,
+      indicatorWidth: 5,
+      indicatorCornerRadius: 8,
+      inactiveIconColor: Colors.grey,
+      primaryColor: Colors.black,
+      bottomPadding: 12,
+      selectedIndex: _tabIndex,
+      onItemSelected: _onTabChanged,
+      items: const [
+        TabNavigationItem(icon: Icons.light_mode_outlined),
+        TabNavigationItem(icon: Icons.message_outlined),
+        TabNavigationItem(),
+        TabNavigationItem(icon: Icons.group_work_outlined),
+        TabNavigationItem(icon: Icons.copy_rounded),
+      ],
+    );
+  }
+
+  _box() {
+    return AnimatedContainer(
+      duration: _duration,
+      curve: Curves.fastEaseInToSlowEaseOut,
+      width: _isExpanded ? 200.0 : height / 2,
+      height: _isExpanded ? 200.0 : 0,
+      decoration: BoxDecoration(
+        color: Colors.blue,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: _boxItemVisible
+          ? Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16 * _animation.value,
+                vertical: 12 * _animation.value,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  BoxOptionItem(
+                    title: "Mood check-in",
+                    icon: Icons.face,
+                    isSelected: true,
+                    animation: _animation,
+                  ),
+                  BoxOptionItem(
+                    title: "Voice note",
+                    icon: Icons.record_voice_over_outlined,
+                    animation: _animation,
+                  ),
+                  BoxOptionItem(
+                    title: "Add photo",
+                    icon: Icons.photo_camera_back_outlined,
+                    animation: _animation,
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox(),
     );
   }
 
